@@ -133,22 +133,12 @@ function create() {
     fishText = this.add.text(100, row1Y, fishCount, textStyle).setOrigin(0, 0.5);
     fishImg.on('pointerdown', () => UI.showShop(this)); // ПЕРЕХОД В МАГАЗИН
 
-   // Обновленный блок валерьянки с вызовом рекламы Telegram
+    // Блок валерьянки: нажатие вызывает видео-рекламу из ui.js
     const valImg = this.add.image(190, row1Y, 'icon_valerian').setScale(0.18).setInteractive();
     valStockText = this.add.text(215, row1Y, valerianStock, textStyle).setOrigin(0, 0.5);
     
     valImg.on('pointerdown', () => { 
-        // Теперь проверка if (isPaused) удалена, клик работает всегда
-        
-        // Вызываем функцию показа рекламы из telegram.js
-        showTelegramAds((success) => {
-            if (success) {
-                valerianStock++; 
-                valStockText.setText(valerianStock); 
-                this.sound.play('tap'); 
-                saveData();
-            }
-        });
+        UI.watchAdForValerian(this); 
     });
 
     memeCountText = this.add.text(345, row1Y, `🖼️ ${seenMemes.size}/20`, { 
@@ -309,4 +299,5 @@ function togglePause() {
         this.physics.resume();
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
+
 }
