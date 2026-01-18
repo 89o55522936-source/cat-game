@@ -1,4 +1,5 @@
-// telegram.js — ФИНАЛЬНАЯ ВЕРСИЯ ДЛЯ ЗАПУСКА В TELEGRAM
+// telegram.js — ФИНАЛЬНАЯ ВЕРСИЯ ДЛЯ ЗАПУСКА В TELEGRAM + Adsgram Rewarded Video
+
 const tg = window.Telegram.WebApp;
 
 // Расширяем приложение на весь экран и сообщаем о готовности сразу
@@ -9,17 +10,28 @@ tg.ready();
 tg.setHeaderColor('#000000');
 tg.setBackgroundColor('#000000');
 
-// Функция для вызова рекламы (сейчас — тестовое подтверждение Telegram)
+/**
+ * Показывает rewarded video рекламу через Adsgram
+ * @param {function(boolean)} callback - вызывается с true при успешном просмотре, false при отмене/ошибке
+ */
 function showTelegramAds(callback) {
-    // Вызываем нативное окно подтверждения Telegram
-    tg.showConfirm("Посмотреть рекламу, чтобы получить валерьянку?", (isConfirmed) => {
-        if (isConfirmed) {
-            // Если игрок нажал "ОК" — выдаем бонус
-            tg.showAlert("Реклама просмотрена! +1 валерьянка");
-            callback(true);
-        } else {
-            // Если игрок нажал "Отмена" — ничего не происходит
-            callback(false);
-        }
+    // Инициализация Adsgram контроллера с вашим Unit ID
+    const adsgramController = Adsgram.init({
+        blockId: "21312"   // ← ваш реальный ID из Adsgram
     });
+
+    // Запуск рекламы
+    adsgramController.show()
+        .then(() => {
+            // Успешный просмотр (пользователь досмотрел до конца)
+            callback(true);
+        })
+        .catch((error) => {
+            // Пользователь закрыл рекламу раньше или произошла ошибка
+            // error может содержать информацию об ошибке (опционально для логов)
+            if (error) {
+                console.warn("Adsgram rejected or error:", error);
+            }
+            callback(false);
+        });
 }
