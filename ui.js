@@ -1,5 +1,4 @@
 // ui.js — Версия v1.6 (Фикс UI и кастомные окна)
-const AdController = window.Adsgram.init({ blockId: "21312" });
 const UI = {
     currentPage: 0,
     itemsPerPage: 20,
@@ -225,16 +224,5 @@ const UI = {
         dialog.add(closeBtn);
         dialog.add(scene.add.text(180, 440, 'ПОНЯЛ', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5));
         closeBtn.on('pointerdown', () => dialog.destroy());
-    },
-
-    watchAdForValerian: function(scene) {
-        AdController.show().then(() => {
-            valerianStock += 5; 
-            if (typeof valStockText !== 'undefined') valStockText.setText(valerianStock);
-            if (typeof saveData === 'function') saveData(); 
-            alert("Мур! +5 валерьянок в запас!");
-        }).catch(() => {
-            alert("Реклама не досмотрена");
-        });
     }
 };
