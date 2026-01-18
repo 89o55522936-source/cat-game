@@ -151,7 +151,7 @@ function create() {
         });
     });
 
-    memeCountText = this.add.text(345, row1Y, `🖼️ ${seenMemes.size}/20`, { 
+    memeCountText = this.add.text(345, row1Y, `🖼️ ${seenMemes.size}/${memes.length}`, { 
         fontSize: '15px', fill: '#000', fontWeight: 'bold', stroke: '#fff', strokeThickness: 3 
     }).setOrigin(1, 0.5).setInteractive();
     memeCountText.on('pointerdown', () => UI.showCollection(this, seenMemes, memes));
@@ -248,7 +248,7 @@ function showMeme() {
     isPaused = true; this.physics.pause();
     const idx = Phaser.Math.Between(0, memes.length - 1);
     seenMemes.add(idx);
-    memeCountText.setText(`🖼️ ${seenMemes.size}/20`);
+    memeCountText.setText(`🖼️ ${seenMemes.size}/${memes.length}`);
     saveData(); 
 
     const overlay = this.add.container(0, 0).setDepth(500);
@@ -310,4 +310,5 @@ function togglePause() {
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
 }
+
 
