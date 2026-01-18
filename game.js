@@ -134,8 +134,8 @@ function create() {
     fishImg.on('pointerdown', () => UI.showShop(this)); // ПЕРЕХОД В МАГАЗИН
 
    // Обновленный блок валерьянки с вызовом рекламы Telegram
-    const valImg = this.add.image(190, row1Y, 'icon_valerian').setScale(0.18).setInteractive();
-    valStockText = this.add.text(215, row1Y, valerianStock, textStyle).setOrigin(0, 0.5);
+    const valImg = this.add.image(190, row1Y, 'icon_valerian').setScale(0.18).setInteractive().setDepth(10);
+    valStockText = this.add.text(215, row1Y, valerianStock, textStyle).setOrigin(0, 0.5).setDepth(10);
     
     valImg.on('pointerdown', () => { 
         // Теперь проверка if (isPaused) удалена, клик работает всегда
@@ -310,3 +310,4 @@ function togglePause() {
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
 }
+
