@@ -129,21 +129,31 @@ function create() {
     const pauseBtn = this.add.text(30, row1Y, '⏸', { fontSize: '34px', fill: '#000', stroke: '#fff', strokeThickness: 4 }).setOrigin(0.5).setInteractive();
     pauseBtn.on('pointerdown', () => togglePause.call(this));
 
-    const fishImg = this.add.image(80, row1Y, 'icon_fish').setScale(0.20).setInteractive().setDepth(10);
-    fishText = this.add.text(100, row1Y, fishCount, textStyle).setOrigin(0, 0.5).setDepth(10);
+    const fishImg = this.add.image(80, row1Y, 'icon_fish').setScale(0.20).setInteractive();
+    fishText = this.add.text(100, row1Y, fishCount, textStyle).setOrigin(0, 0.5);
     fishImg.on('pointerdown', () => UI.showShop(this)); // ПЕРЕХОД В МАГАЗИН
 
-    // Блок валерьянки: нажатие вызывает видео-рекламу из ui.js
-    const valImg = this.add.image(190, row1Y, 'icon_valerian').setScale(0.18).setInteractive().setDepth(10);
-    valStockText = this.add.text(215, row1Y, valerianStock, textStyle).setOrigin(0, 0.5).setDepth(10);
+   // Обновленный блок валерьянки с вызовом рекламы Telegram
+    const valImg = this.add.image(190, row1Y, 'icon_valerian').setScale(0.18).setInteractive();
+    valStockText = this.add.text(215, row1Y, valerianStock, textStyle).setOrigin(0, 0.5);
     
     valImg.on('pointerdown', () => { 
-        UI.watchAdForValerian(this); 
+        // Теперь проверка if (isPaused) удалена, клик работает всегда
+        
+        // Вызываем функцию показа рекламы из telegram.js
+        showTelegramAds((success) => {
+            if (success) {
+                valerianStock++; 
+                valStockText.setText(valerianStock); 
+                this.sound.play('tap'); 
+                saveData();
+            }
+        });
     });
 
     memeCountText = this.add.text(345, row1Y, `🖼️ ${seenMemes.size}/20`, { 
         fontSize: '15px', fill: '#000', fontWeight: 'bold', stroke: '#fff', strokeThickness: 3 
-    }).setDepth(10).setOrigin(1, 0.5).setInteractive();
+    }).setOrigin(1, 0.5).setInteractive();
     memeCountText.on('pointerdown', () => UI.showCollection(this, seenMemes, memes));
 
     scoreText = this.add.text(15, row2Y, '0', textStyle).setOrigin(0, 0.5);
@@ -155,8 +165,8 @@ function create() {
     const sRect = this.add.rectangle(0, 0, 200, 60, 0x00aa00).setInteractive();
     const sText = this.add.text(0, 0, 'ИГРАТЬ', { fontSize: '28px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
     
-    const settingsBtn = this.add.rectangle(0, -80, 200, 50, 0x555555).setInteractive().setDepth(201);
-    const settingsText = this.add.text(0, -80, 'НАСТРОЙКА', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5).setDepth(201);
+    const settingsBtn = this.add.rectangle(0, -80, 200, 50, 0x555555).setInteractive();
+    const settingsText = this.add.text(0, -80, 'НАСТРОЙКА', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5);
     
     startBtn.add([sRect, sText, settingsBtn, settingsText]);
     
@@ -166,16 +176,18 @@ function create() {
     tomatoesGroup = this.physics.add.group();
 
     this.input.on('gameobjectdown', (pointer, obj) => {
-        // Если игра на паузе, не запущена или нажали на кнопку интерфейса — ничего не делаем
-        if (!gameStarted || isPaused || !gameRunning) return;
-
-        // Проверяем: если объект ПАДАЕТ (есть физическое тело и скорость) — это цель для клика
-        if (obj.body && obj.body.velocity.y > 0) {
+        if (isPaused || !gameRunning) return;
+        
+        if (obj.texture) {
+            // Если игрок нажал на ПОМИДОР — уничтожаем его и даем очки
             if (obj.texture.key === 'tomato') {
                 destroyTomato.call(this, obj);
-            } else if (obj.texture.key === 'icon_fish') {
-                this.sound.play('tap');
-                obj.destroy(); 
+            } 
+            // Если игрок случайно нажал на РЫБКУ — она исчезает БЕЗ начисления в счетчик
+            else if (obj.texture.key === 'icon_fish') {
+                this.sound.play('tap'); // Звук обычного нажатия
+                obj.destroy(); // Удаляем объект с экрана
+                // Счетчик fishCount НЕ увеличиваем
             }
         }
     });
@@ -297,6 +309,4 @@ function togglePause() {
         this.physics.resume();
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
-
 }
-
