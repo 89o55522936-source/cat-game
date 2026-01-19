@@ -54,6 +54,10 @@ const memes = [
     "Рыбка в лапы — помидор в морду! Котий рай."
 ];
 
+let lastDailyTime = 0;
+let referralCount = 0;
+let topScores = [0, 0, 0];
+
 function saveData() {
     const data = { 
         fish: fishCount, 
@@ -63,7 +67,10 @@ function saveData() {
         bg: currentBgKey,
         ownedCats: ownedCats,
         ownedBgs: ownedBgs,
-        sound: isSoundOn
+        sound: isSoundOn,
+        lastDaily: lastDailyTime,
+        refCount: referralCount,
+        tops: topScores
     };
     localStorage.setItem('cat_game_save_v2', JSON.stringify(data));
 }
@@ -80,6 +87,9 @@ function loadData() {
         ownedCats = data.ownedCats || ['cat'];
         ownedBgs = data.ownedBgs || ['bg_game'];
         isSoundOn = (data.sound !== undefined) ? data.sound : true;
+        lastDailyTime = data.lastDaily || 0;
+        referralCount = data.refCount || 0;
+        topScores = data.tops || [0, 0, 0];
     }
 }
 
@@ -108,107 +118,65 @@ function preload() {
     this.load.image('cat_black_angry', 'assets/sprites/cat_black_angry.png');
     this.load.image('cat_black_happy', 'assets/sprites/cat_black_happy.png');
 
+    // Общие
     this.load.image('tomato', 'assets/sprites/tomato.png');
-    this.load.image('icon_valerian', 'assets/sprites/icon_valerian.png');
     this.load.image('icon_fish', 'assets/sprites/icon_fish.png');
-    
+    this.load.image('icon_valerian', 'assets/sprites/icon_valerian.png');
+
+    // Звуки
+    this.load.audio('tap', 'assets/sounds/tap.mp3');
     this.load.audio('meow', 'assets/sounds/meow.mp3');
     this.load.audio('meow2', 'assets/sounds/meow2.mp3');
-    this.load.audio('tap', 'assets/sounds/tap.mp3');
     this.load.audio('loss', 'assets/sounds/loss.mp3');
 }
 
 function create() {
-    this.add.image(180, 320, currentBgKey).setDisplaySize(360, 640);
-    cat = this.physics.add.sprite(180, 500, currentSkin + '_sleep').setScale(0.65).setImmovable(true);
     this.sound.mute = !isSoundOn;
 
-    const textStyle = { fontSize: '22px', fill: '#000', fontWeight: 'bold', stroke: '#fff', strokeThickness: 4 };
-    const row1Y = 565, row2Y = 610; 
-
-    const pauseBtn = this.add.text(30, row1Y, '⏸', { fontSize: '34px', fill: '#000', stroke: '#fff', strokeThickness: 4 }).setOrigin(0.5).setInteractive();
-    pauseBtn.on('pointerdown', () => togglePause.call(this));
-
-    const fishImg = this.add.image(80, row1Y, 'icon_fish').setScale(0.20).setInteractive();
-    fishText = this.add.text(100, row1Y, fishCount, textStyle).setOrigin(0, 0.5);
-    fishImg.on('pointerdown', () => UI.showShop(this)); // ПЕРЕХОД В МАГАЗИН
-
-   // Обновленный блок валерьянки с вызовом рекламы Telegram
-    const valImg = this.add.image(190, row1Y, 'icon_valerian').setScale(0.18).setInteractive().setDepth(10);
-    valStockText = this.add.text(215, row1Y, valerianStock, textStyle).setOrigin(0, 0.5).setDepth(10);
-    
-    valImg.on('pointerdown', () => { 
-        // Теперь проверка if (isPaused) удалена, клик работает всегда
-        
-        // Вызываем функцию показа рекламы из telegram.js
-        showTelegramAds((success) => {
-            if (success) {
-                valerianStock++; 
-                valStockText.setText(valerianStock); 
-                this.sound.play('tap'); 
-                saveData();
-            }
-        });
-    });
-
-    memeCountText = this.add.text(345, row1Y, `🖼️ ${seenMemes.size}/${memes.length}`, { 
-        fontSize: '15px', fill: '#000', fontWeight: 'bold', stroke: '#fff', strokeThickness: 3 
-    }).setOrigin(1, 0.5).setInteractive();
-    memeCountText.on('pointerdown', () => UI.showCollection(this, seenMemes, memes));
-
-    scoreText = this.add.text(15, row2Y, '0', textStyle).setOrigin(0, 0.5);
-    livesText = this.add.text(180, row2Y, '❤❤❤', { fontSize: '24px', fill: '#ff0000' }).setOrigin(0.5);
-    levelText = this.add.text(345, row2Y, 'LVL 1', textStyle).setOrigin(1, 0.5);
-
-    // Кнопки старта и настройки
-    startBtn = this.add.container(180, 320).setDepth(200);
-    const sRect = this.add.rectangle(0, 0, 200, 60, 0x00aa00).setInteractive();
-    const sText = this.add.text(0, 0, 'ИГРАТЬ', { fontSize: '28px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
-    
-    const settingsBtn = this.add.rectangle(0, -80, 200, 50, 0x555555).setInteractive();
-    const settingsText = this.add.text(0, -80, 'НАСТРОЙКА', { fontSize: '20px', fill: '#fff' }).setOrigin(0.5);
-    
-    startBtn.add([sRect, sText, settingsBtn, settingsText]);
-    
-    sRect.on('pointerdown', () => { gameStarted = true; startBtn.destroy(); });
-    settingsBtn.on('pointerdown', () => UI.showSettings(this));
-
+    const bg = this.add.image(180, 320, currentBgKey).setScale(1);
+    cat = this.add.image(180, 560, `${currentSkin}_sleep`).setScale(0.55);
     tomatoesGroup = this.physics.add.group();
 
-    this.input.on('gameobjectdown', (pointer, obj) => {
-        if (isPaused || !gameRunning) return;
-        
-        if (obj.texture) {
-            // Если игрок нажал на ПОМИДОР — уничтожаем его и даем очки
-            if (obj.texture.key === 'tomato') {
-                destroyTomato.call(this, obj);
-            } 
-            // Если игрок случайно нажал на РЫБКУ — она исчезает БЕЗ начисления в счетчик
-            else if (obj.texture.key === 'icon_fish') {
-                this.sound.play('tap'); // Звук обычного нажатия
-                obj.destroy(); // Удаляем объект с экрана
-                // Счетчик fishCount НЕ увеличиваем
-            }
+    scoreText = this.add.text(20, 10, '0', { fontSize: '24px', fill: '#fff' });
+    livesText = this.add.text(300, 10, '❤❤❤', { fontSize: '24px', fill: '#fff' });
+    fishText = this.add.text(20, 50, `🐟 ${fishCount}`, { fontSize: '20px', fill: '#fff' });
+    valStockText = this.add.text(300, 50, `🌿 ${valerianStock}`, { fontSize: '20px', fill: '#fff' });
+    levelText = this.add.text(180, 10, 'LVL 1', { fontSize: '20px', fill: '#aaa' }).setOrigin(0.5);
+    memeCountText = this.add.text(180, 50, `🖼️ ${seenMemes.size}/${memes.length}`, { fontSize: '18px', fill: '#aaa' }).setOrigin(0.5);
+
+    startBtn = this.add.rectangle(180, 320, 200, 60, 0x00ff00).setInteractive();
+    const startTxt = this.add.text(180, 320, 'ИГРАТЬ', { fontSize: '24px', fill: '#000', fontWeight: 'bold' }).setOrigin(0.5);
+
+    startBtn.on('pointerdown', () => {
+        gameStarted = true; startBtn.destroy(); startTxt.destroy();
+        updateCatTexture('happy'); this.sound.play('meow2');
+    });
+
+    const settingsBtn = this.add.rectangle(300, 580, 50, 50, 0x444444).setInteractive();
+    this.add.text(300, 580, '⚙️', { fontSize: '30px', fill: '#fff' }).setOrigin(0.5);
+    settingsBtn.on('pointerdown', () => UI.showSettings(this));
+
+    const collectionBtn = this.add.rectangle(60, 580, 50, 50, 0x444444).setInteractive();
+    this.add.text(60, 580, '🖼️', { fontSize: '30px', fill: '#fff' }).setOrigin(0.5);
+    collectionBtn.on('pointerdown', () => UI.showCollection(this, seenMemes, memes));
+
+    const shopBtn = this.add.rectangle(180, 580, 50, 50, 0x444444).setInteractive();
+    this.add.text(180, 580, '🏪', { fontSize: '30px', fill: '#fff' }).setOrigin(0.5);
+    shopBtn.on('pointerdown', () => UI.showShop(this));
+
+    this.input.on('pointerdown', togglePause);
+
+    tomatoesGroup.enableBody = true;
+    this.physics.add.overlap(cat, tomatoesGroup, (c, t) => {
+        if (t.texture.key === 'icon_fish') {
+            fishCount++; fishText.setText(`🐟 ${fishCount}`); saveData();
+            t.destroy(); this.sound.play('meow2');
+        } else {
+            t.destroy(); loseLife.call(this);
         }
     });
 
-    this.physics.add.overlap(cat, tomatoesGroup, (c, obj) => {
-        if (obj.texture.key === 'tomato') {
-            obj.destroy();
-            loseLife.call(this);
-        } else if (obj.texture.key === 'icon_fish') {
-            obj.destroy();
-            fishCount++; fishText.setText(fishCount);
-            this.sound.play('meow2');
-            updateCatTexture('sleep'); 
-            saveData();
-        }
-    });
-}
-
-function updateCatTexture(state = 'sleep') {
-    if (!cat) return;
-    cat.setTexture(currentSkin + '_' + state);
+    tomatoesGroup.children.iterate(t => t.on('pointerdown', () => destroyTomato.call(this, t)));
 }
 
 function update(time) {
@@ -272,6 +240,13 @@ function loseLife() {
 
 function showGameOver() {
     gameRunning = false; this.physics.pause(); this.sound.play('loss');
+
+    // Обновление топ-скоров
+    topScores.push(score);
+    topScores.sort((a, b) => b - a);
+    topScores = topScores.slice(0, 3);
+    saveData();
+
     const over = this.add.container(0, 0).setDepth(600);
     over.add(this.add.rectangle(180, 320, 360, 640, 0x000000, 0.7));
     const btn = this.add.rectangle(180, 320, 280, 60, 0x9400d3).setInteractive();
@@ -309,4 +284,8 @@ function togglePause() {
         this.physics.resume();
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
+}
+
+function updateCatTexture(mood) {
+    cat.setTexture(`${currentSkin}_${mood}`);
 }
