@@ -35,3 +35,20 @@ function showTelegramAds(callback) {
             callback(false);
         });
 }
+
+function shareMeme(memeText) {
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(memeText)}`;
+    tg.openLink(shareUrl);
+}
+
+function shareGame() {
+    const gameText = "Играю в крутую игру с котиками и мемами! Присоединяйся!";
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(gameText)}&url=${encodeURIComponent('https://t.me/your_bot_username')}`; // Замените на реальный бот URL
+    tg.openLink(shareUrl);
+}
+
+function shareTopScore(score) {
+    const shareText = `Я набрал ${score} очков и спас котика от помидоров в Cat vs Tomatoes!`;
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent('https://t.me/your_bot_username')}`; // Замените на реальный бот URL
+    tg.openLink(shareUrl);
+}
