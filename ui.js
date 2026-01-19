@@ -63,6 +63,7 @@ const UI = {
 
     drawGrid: function(scene, container, seenMemes, allMemes) {
         const startX = 65, startY = 135, stepX = 75, stepY = 75, cols = 4;
+        let isMemeOpen = false; // Флаг для предотвращения множественных открытий
         for (let i = 0; i < this.itemsPerPage; i++) {
             const index = (this.currentPage * this.itemsPerPage) + i;
             if (index >= allMemes.length) break;
@@ -73,89 +74,28 @@ const UI = {
             const box = scene.add.rectangle(x, y, 60, 60, boxColor).setStrokeStyle(2, 0xffffff).setInteractive();
             const numText = scene.add.text(x, y, index + 1, { fontSize: '22px', fill: isOpened ? '#000' : '#fff', fontWeight: 'bold' }).setOrigin(0.5);
             container.add([box, numText]);
-            if (isOpened) box.on('pointerdown', () => this.showMemeDetail(scene, allMemes[index]));
+            if (isOpened) {
+                box.on('pointerdown', () => {
+                    if (isMemeOpen) return; // Блокировка, если уже открыт мем
+                    isMemeOpen = true;
+                    const memeContainer = scene.add.container(0, 0).setDepth(1500);
+                    const memeBg = scene.add.rectangle(180, 320, 320, 200, 0x222222).setStrokeStyle(2, 0xffffff);
+                    const memeText = scene.add.text(180, 280, allMemes[index], { fontSize: '18px', fill: '#fff', align: 'center', wordWrap: { width: 280 } }).setOrigin(0.5);
+                    const shareBtn = scene.add.rectangle(100, 380, 100, 40, 0x0066cc).setInteractive();
+                    const shareText = scene.add.text(100, 380, 'ПОДЕЛИТЬСЯ', { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
+                    const okBtn = scene.add.rectangle(260, 380, 80, 40, 0x00aa00).setInteractive();
+                    const okText = scene.add.text(260, 380, 'ОК', { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
+                    memeContainer.add([memeBg, memeText, shareBtn, shareText, okBtn, okText]);
+                    shareBtn.on('pointerdown', () => {
+                        shareMeme(allMemes[index]);
+                    });
+                    okBtn.on('pointerdown', () => {
+                        memeContainer.destroy();
+                        isMemeOpen = false;
+                    });
+                });
+            }
         }
-    },
-
-    showMemeDetail: function(scene, text) {
-        const detail = scene.add.container(0, 0).setDepth(1100);
-        const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
-        const back = scene.add.rectangle(180, 320, 310, 320, 0x111111, 0.98).setStrokeStyle(3, 0x00ff00);
-        const memeText = scene.add.text(180, 270, text, { fontSize: '20px', fill: '#fff', align: 'center', wordWrap: { width: 270 } }).setOrigin(0.5);
-        const closeBtn = scene.add.rectangle(180, 420, 150, 45, 0x770000).setInteractive();
-        const closeTxt = scene.add.text(180, 420, 'ПОНЯТНО', { fontSize: '16px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
-        detail.add([dim, back, memeText, closeBtn, closeTxt]);
-        closeBtn.on('pointerdown', () => detail.destroy());
-    },
-
-    showShop: function(scene) {
-        const wasPaused = isPaused;
-        isPaused = true; scene.physics.pause();
-        if (this.container) this.container.destroy();
-        this.container = scene.add.container(0, 0).setDepth(1000);
-
-        const bg = scene.add.rectangle(180, 320, 340, 540, 0x000022, 0.95).setStrokeStyle(4, 0x00ffff);
-        const title = scene.add.text(180, 75, 'МАГАЗИН', { fontSize: '26px', fontWeight: 'bold', fill: '#fff' }).setOrigin(0.5);
-        this.container.add([bg, title]);
-
-        // Вкладки
-        const isCats = this.shopTab === 'cats';
-        const btnCats = scene.add.rectangle(110, 120, 120, 40, isCats ? 0x00ffff : 0x444444).setInteractive();
-        const txtCats = scene.add.text(110, 120, 'КОТЫ', { fontSize: '16px', fill: isCats ? '#000' : '#fff' }).setOrigin(0.5);
-        
-        const isBgs = this.shopTab === 'backgrounds';
-        const btnBgs = scene.add.rectangle(250, 120, 120, 40, isBgs ? 0x00ffff : 0x444444).setInteractive();
-        const txtBgs = scene.add.text(250, 120, 'ФОНЫ', { fontSize: '16px', fill: isBgs ? '#000' : '#fff' }).setOrigin(0.5);
-        
-        this.container.add([btnCats, txtCats, btnBgs, txtBgs]);
-
-        btnCats.on('pointerdown', () => { this.shopTab = 'cats'; this.showShop(scene); });
-        btnBgs.on('pointerdown', () => { this.shopTab = 'backgrounds'; this.showShop(scene); });
-
-        const items = this.shopItems[this.shopTab];
-        items.forEach((item, i) => {
-            const y = 190 + i * 70;
-            const isOwned = (this.shopTab === 'cats') ? ownedCats.includes(item.id) : ownedBgs.includes(item.id);
-            const isSelected = (this.shopTab === 'cats') ? currentSkin === item.id : currentBgKey === item.id;
-
-            const itemBg = scene.add.rectangle(180, y, 300, 60, isSelected ? 0x225522 : 0x222222).setStrokeStyle(2, 0xffffff).setInteractive();
-            const itemName = scene.add.text(45, y, item.name, { fontSize: '18px', fill: '#fff' }).setOrigin(0, 0.5);
-            
-            let statusTxt = isOwned ? (isSelected ? "ВЫБРАНО" : "ВЫБРАТЬ") : `🛒 ${item.price}`;
-            const statusBtn = scene.add.text(315, y, statusTxt, { fontSize: '16px', fill: isOwned ? '#00ff00' : '#ffff00', fontWeight: 'bold' }).setOrigin(1, 0.5);
-
-            this.container.add([itemBg, itemName, statusBtn]);
-
-            itemBg.on('pointerdown', () => {
-                if (!isOwned) {
-                    if (fishCount >= item.price) {
-                        fishCount -= item.price;
-                        if (this.shopTab === 'cats') ownedCats.push(item.id);
-                        else ownedBgs.push(item.id);
-                        fishText.setText(fishCount);
-                        saveData();
-                        this.showShop(scene);
-                    }
-                } else {
-                    if (this.shopTab === 'cats') currentSkin = item.id;
-                    else {
-                        currentBgKey = item.id;
-                        scene.children.list[0].setTexture(item.id);
-                    }
-                    saveData();
-                    updateCatTexture();
-                    this.showShop(scene);
-                }
-            });
-        });
-
-        const closeBtn = scene.add.rectangle(180, 555, 200, 40, 0xcc0000).setInteractive();
-        const closeText = scene.add.text(180, 555, 'ЗАКРЫТЬ', { fontSize: '18px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
-        this.container.add([closeBtn, closeText]);
-        closeBtn.on('pointerdown', () => { 
-            this.container.destroy(); this.container = null; 
-            if (!wasPaused) { isPaused = false; scene.physics.resume(); }
-        });
     },
 
     showSettings: function(scene) {
@@ -164,36 +104,91 @@ const UI = {
         
         const bg = scene.add.rectangle(180, 320, 300, 400, 0x000000, 0.9).setStrokeStyle(3, 0xffffff);
         const title = scene.add.text(180, 160, 'НАСТРОЙКИ', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-        
-        const soundBtn = scene.add.rectangle(180, 230, 220, 40, 0x444444).setInteractive();
-        const soundTxt = scene.add.text(180, 230, `ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-        soundBtn.on('pointerdown', () => {
-            isSoundOn = !isSoundOn;
-            scene.sound.mute = !isSoundOn;
-            soundTxt.setText(`ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`);
-            saveData();
-        });
+        this.container.add([bg, title]);
 
-        const resetBtn = scene.add.rectangle(180, 290, 220, 40, 0x660000).setInteractive();
-        const resetTxt = scene.add.text(180, 290, 'СБРОС ПРОГРЕССА', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
-        resetBtn.on('pointerdown', () => {
-            this.showConfirm(scene, "Сбросить весь прогресс?", () => {
-                localStorage.clear();
-                location.reload();
+        // Вкладки
+        this.settingsTab = 'general';
+        const tabGeneral = scene.add.text(80, 200, 'ОБЩИЕ', { fontSize: '16px', fill: this.settingsTab === 'general' ? '#fff' : '#aaa' }).setOrigin(0.5).setInteractive();
+        tabGeneral.on('pointerdown', () => { this.settingsTab = 'general'; this.showSettings(scene); });
+        const tabSocial = scene.add.text(180, 200, 'СОЦ.', { fontSize: '16px', fill: this.settingsTab === 'social' ? '#fff' : '#aaa' }).setOrigin(0.5).setInteractive();
+        tabSocial.on('pointerdown', () => { this.settingsTab = 'social'; this.showSettings(scene); });
+        const tabRating = scene.add.text(280, 200, 'РЕЙТИНГ', { fontSize: '16px', fill: this.settingsTab === 'rating' ? '#fff' : '#aaa' }).setOrigin(0.5).setInteractive();
+        tabRating.on('pointerdown', () => { this.settingsTab = 'rating'; this.showSettings(scene); });
+        this.container.add([tabGeneral, tabSocial, tabRating]);
+
+        if (this.settingsTab === 'general') {
+            const soundBtn = scene.add.rectangle(180, 250, 220, 40, 0x444444).setInteractive();
+            const soundTxt = scene.add.text(180, 250, `ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
+            soundBtn.on('pointerdown', () => {
+                isSoundOn = !isSoundOn;
+                scene.sound.mute = !isSoundOn;
+                soundTxt.setText(`ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`);
+                saveData();
             });
-        });
 
-        const infoBtn = scene.add.rectangle(180, 350, 220, 40, 0x006600).setInteractive();
-        const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
-        infoBtn.on('pointerdown', () => {
-            this.showInfo(scene, "ИНСТРУКЦИЯ\n\n1. Сбивай помидоры кликом.\n2. Лови рыбок для магазина.\n3. Каждые 500 очков - новый мем.\n4. Валерьянка спасет при проигрыше.\n5. Покупай скины в магазине!");
-        });
+            const resetBtn = scene.add.rectangle(180, 310, 220, 40, 0x660000).setInteractive();
+            const resetTxt = scene.add.text(180, 310, 'СБРОС ПРОГРЕССА', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+            resetBtn.on('pointerdown', () => {
+                this.showConfirm(scene, "Сбросить весь прогресс?", () => {
+                    localStorage.clear();
+                    location.reload();
+                });
+            });
 
-        const author = scene.add.text(180, 410, 'Автор: @AlexCosta1978', { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
-        const closeBtn = scene.add.text(180, 470, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setInteractive();
+            const infoBtn = scene.add.rectangle(180, 370, 220, 40, 0x006600).setInteractive();
+            const infoTxt = scene.add.text(180, 370, 'ИНСТРУКЦИЯ', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+            infoBtn.on('pointerdown', () => {
+                this.showInfo(scene, "ИНСТРУКЦИЯ\n\n1. Сбивай помидоры кликом.\n2. Лови рыбок для магазина.\n3. Каждые 500 очков - новый мем.\n4. Валерьянка спасет при проигрыше.\n5. Покупай скины в магазине!");
+            });
+
+            const author = scene.add.text(180, 430, 'Автор: @AlexCosta1978', { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
+            this.container.add([soundBtn, soundTxt, resetBtn, resetTxt, infoBtn, infoTxt, author]);
+        } else if (this.settingsTab === 'social') {
+            const recommendBtn = scene.add.rectangle(180, 250, 220, 40, 0x0066cc).setInteractive();
+            const recommendTxt = scene.add.text(180, 250, 'РЕКОМЕНДОВАТЬ ДРУГУ', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+            recommendBtn.on('pointerdown', () => {
+                if (referralCount < 50) {
+                    referralCount++;
+                    valerianStock++;
+                    valStockText.setText(valerianStock);
+                    saveData();
+                }
+                shareGame();
+            });
+
+            const dailyBtn = scene.add.rectangle(180, 310, 220, 40, 0x00aa00).setInteractive();
+            const now = Date.now();
+            const canClaim = (now - lastDailyTime) >= 86400000; // 24 часа
+            const dailyTxt = scene.add.text(180, 310, canClaim ? 'ЕЖЕДНЕВНЫЙ БОНУС (+1 ВАЛЕРЬЯНКА)' : 'БОНУС УЖЕ ЗАБРАН (ПОДОЖДИ 24 ЧАСА)', { fontSize: '14px', fill: '#fff', wordWrap: { width: 200 } }).setOrigin(0.5);
+            if (!canClaim) dailyBtn.setFillStyle(0x444444);
+            dailyBtn.on('pointerdown', () => {
+                if (canClaim) {
+                    lastDailyTime = now;
+                    valerianStock++;
+                    valStockText.setText(valerianStock);
+                    saveData();
+                    this.showSettings(scene); // Обновить UI
+                }
+            });
+
+            const refInfo = scene.add.text(180, 370, `ВАЛЕРЬЯНОК ЗА РЕКОМЕНДАЦИИ: ${referralCount}/50`, { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
+            this.container.add([recommendBtn, recommendTxt, dailyBtn, dailyTxt, refInfo]);
+        } else if (this.settingsTab === 'rating') {
+            const top1 = scene.add.text(180, 250, `1. ${topScores[0]} ОЧКОВ`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
+            const shareTopBtn = scene.add.rectangle(280, 250, 60, 30, 0x0066cc).setInteractive();
+            const shareTopTxt = scene.add.text(280, 250, 'ПОДЕЛИТЬСЯ', { fontSize: '12px', fill: '#fff' }).setOrigin(0.5);
+            shareTopBtn.on('pointerdown', () => {
+                shareTopScore(topScores[0]);
+            });
+
+            const top2 = scene.add.text(180, 310, `2. ${topScores[1]} ОЧКОВ`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
+            const top3 = scene.add.text(180, 370, `3. ${topScores[2]} ОЧКОВ`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
+            this.container.add([top1, shareTopBtn, shareTopTxt, top2, top3]);
+        }
+
+        const closeBtn = scene.add.text(180, 490, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setInteractive();
         closeBtn.on('pointerdown', () => this.container.destroy());
-
-        this.container.add([bg, title, soundBtn, soundTxt, resetBtn, resetTxt, infoBtn, infoTxt, author, closeBtn]);
+        this.container.add(closeBtn);
     },
 
     showConfirm: function(scene, text, onConfirm) {
