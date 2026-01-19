@@ -48,151 +48,152 @@ const UI = {
 
         const nextBtn = scene.add.text(280, navY, '>', { fontSize: '40px', fill: (this.currentPage + 1) < totalPages ? '#fff' : '#444' }).setOrigin(0.5).setInteractive();
         nextBtn.on('pointerdown', () => { if ((this.currentPage + 1) < totalPages) { this.currentPage++; this.drawMainOverlay(scene, seenMemes, allMemes, wasPausedBefore); }});
+        
+        const closeBtn = scene.add.rectangle(180, 555, 200, 40, 0xcc0000).setInteractive();
+        const closeText = scene.add.text(180, 555, 'ВЕРНУТЬСЯ', { fontSize: '18px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+        
+        this.container.add([prevBtn, pageText, nextBtn, closeBtn, closeText]);
 
-        const closeBtn = scene.add.text(180, 550, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000' }).setOrigin(0.5).setInteractive();
         closeBtn.on('pointerdown', () => {
             this.container.destroy();
-            isPaused = wasPausedBefore;
-            if (!isPaused) scene.physics.resume();
+            this.container = null;
+            if (!wasPausedBefore) { isPaused = false; scene.physics.resume(); }
         });
-
-        this.container.add([prevBtn, pageText, nextBtn, closeBtn]);
     },
 
     drawGrid: function(scene, container, seenMemes, allMemes) {
-        const cols = 4;
-        const startX = 20, startY = 110, stepX = 80, stepY = 80;
-
+        const startX = 65, startY = 135, stepX = 75, stepY = 75, cols = 4;
         for (let i = 0; i < this.itemsPerPage; i++) {
             const index = (this.currentPage * this.itemsPerPage) + i;
             if (index >= allMemes.length) break;
-
             const x = startX + (i % cols) * stepX;
             const y = startY + Math.floor(i / cols) * stepY;
-
-            const rect = scene.add.rectangle(x + 40, y + 40, 70, 70, seenMemes.has(index) ? 0x00ff00 : 0xaaaaaa).setStrokeStyle(2, 0xffffff).setInteractive();
-            const txt = scene.add.text(x + 40, y + 40, seenMemes.has(index) ? allMemes[index] : '?', { fontSize: '12px', fill: '#000', wordWrap: { width: 60 }, align: 'center' }).setOrigin(0.5);
-
-            rect.on('pointerdown', () => {
-                if (isMemeOpen || !seenMemes.has(index)) return;
-                isMemeOpen = true;
-                this.showMemeDetail(scene, allMemes[index]);
-            });
-
-            container.add([rect, txt]);
+            const isOpened = seenMemes.has(index);
+            const boxColor = isOpened ? 0x00ff00 : 0x333333;
+            const box = scene.add.rectangle(x, y, 60, 60, boxColor).setStrokeStyle(2, 0xffffff).setInteractive();
+            const numText = scene.add.text(x, y, index + 1, { fontSize: '22px', fill: isOpened ? '#000' : '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+            container.add([box, numText]);
+            if (isOpened) box.on('pointerdown', () => this.showMemeDetail(scene, allMemes[index]));
         }
     },
 
-    showMemeDetail: function(scene, memeText) {
-        const dialog = scene.add.container(0, 0).setDepth(3000);
-        dialog.add(scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8));
-        dialog.add(scene.add.rectangle(180, 320, 300, 320, 0x222222, 1).setStrokeStyle(2, 0xffffff));
-        dialog.add(scene.add.text(180, 300, memeText, { fontSize: '16px', fill: '#fff', align: 'left', wordWrap: { width: 260 } }).setOrigin(0.5));
+    showMemeDetail: function(scene, text) {
+        const detail = scene.add.container(0, 0).setDepth(1100);
+        const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
+        const back = scene.add.rectangle(180, 320, 310, 320, 0x111111, 0.98).setStrokeStyle(3, 0x00ff00);
+        const memeText = scene.add.text(180, 270, text, { fontSize: '20px', fill: '#fff', align: 'center', wordWrap: { width: 270 } }).setOrigin(0.5);
+        const closeBtn = scene.add.rectangle(180, 420, 150, 45, 0x770000).setInteractive();
+        const closeTxt = scene.add.text(180, 420, 'ПОНЯТНО', { fontSize: '16px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+        detail.add([dim, back, memeText, closeBtn, closeTxt]);
+        closeBtn.on('pointerdown', () => detail.destroy());
+    },
+
+    showShop: function(scene) {
+        const wasPaused = isPaused;
+        isPaused = true; scene.physics.pause();
+        if (this.container) this.container.destroy();
+        this.container = scene.add.container(0, 0).setDepth(1000);
+
+        const bg = scene.add.rectangle(180, 320, 340, 540, 0x000022, 0.95).setStrokeStyle(4, 0x00ffff);
+        const title = scene.add.text(180, 75, 'МАГАЗИН', { fontSize: '26px', fontWeight: 'bold', fill: '#fff' }).setOrigin(0.5);
+        this.container.add([bg, title]);
+
+        // Вкладки
+        const isCats = this.shopTab === 'cats';
+        const btnCats = scene.add.rectangle(110, 120, 120, 40, isCats ? 0x00ffff : 0x444444).setInteractive();
+        const txtCats = scene.add.text(110, 120, 'КОТЫ', { fontSize: '16px', fill: isCats ? '#000' : '#fff' }).setOrigin(0.5);
         
-        const shareBtn = scene.add.rectangle(100, 440, 120, 40, 0x006600).setInteractive();
-        dialog.add(shareBtn);
-        dialog.add(scene.add.text(100, 440, 'ПОДЕЛИТЬСЯ', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5));
-        shareBtn.on('pointerdown', () => {
-            tg.share({ text: memeText + '\nИз игры Cat vs Tomato! ' + URL });
+        const isBgs = this.shopTab === 'backgrounds';
+        const btnBgs = scene.add.rectangle(250, 120, 120, 40, isBgs ? 0x00ffff : 0x444444).setInteractive();
+        const txtBgs = scene.add.text(250, 120, 'ФОНЫ', { fontSize: '16px', fill: isBgs ? '#000' : '#fff' }).setOrigin(0.5);
+        
+        this.container.add([btnCats, txtCats, btnBgs, txtBgs]);
+
+        btnCats.on('pointerdown', () => { this.shopTab = 'cats'; this.showShop(scene); });
+        btnBgs.on('pointerdown', () => { this.shopTab = 'backgrounds'; this.showShop(scene); });
+
+        const items = this.shopItems[this.shopTab];
+        items.forEach((item, i) => {
+            const y = 190 + i * 70;
+            const isOwned = (this.shopTab === 'cats') ? ownedCats.includes(item.id) : ownedBgs.includes(item.id);
+            const isSelected = (this.shopTab === 'cats') ? currentSkin === item.id : currentBgKey === item.id;
+
+            const itemBg = scene.add.rectangle(180, y, 300, 60, isSelected ? 0x225522 : 0x222222).setStrokeStyle(2, 0xffffff).setInteractive();
+            const itemName = scene.add.text(45, y, item.name, { fontSize: '18px', fill: '#fff' }).setOrigin(0, 0.5);
+            
+            let statusTxt = isOwned ? (isSelected ? "ВЫБРАНО" : "ВЫБРАТЬ") : `🛒 ${item.price}`;
+            const statusBtn = scene.add.text(315, y, statusTxt, { fontSize: '16px', fill: isOwned ? '#00ff00' : '#ffff00', fontWeight: 'bold' }).setOrigin(1, 0.5);
+
+            this.container.add([itemBg, itemName, statusBtn]);
+
+            itemBg.on('pointerdown', () => {
+                if (!isOwned) {
+                    if (fishCount >= item.price) {
+                        fishCount -= item.price;
+                        if (this.shopTab === 'cats') ownedCats.push(item.id);
+                        else ownedBgs.push(item.id);
+                        fishText.setText(fishCount);
+                        saveData();
+                        this.showShop(scene);
+                    }
+                } else {
+                    if (this.shopTab === 'cats') currentSkin = item.id;
+                    else {
+                        currentBgKey = item.id;
+                        scene.children.list[0].setTexture(item.id);
+                    }
+                    saveData();
+                    updateCatTexture();
+                    this.showShop(scene);
+                }
+            });
         });
 
-        const closeBtn = scene.add.rectangle(260, 440, 120, 40, 0x444444).setInteractive();
-        dialog.add(closeBtn);
-        dialog.add(scene.add.text(260, 440, 'ОК', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5));
-        closeBtn.on('pointerdown', () => {
-            dialog.destroy();
-            isMemeOpen = false;
+        const closeBtn = scene.add.rectangle(180, 555, 200, 40, 0xcc0000).setInteractive();
+        const closeText = scene.add.text(180, 555, 'ЗАКРЫТЬ', { fontSize: '18px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+        this.container.add([closeBtn, closeText]);
+        closeBtn.on('pointerdown', () => { 
+            this.container.destroy(); this.container = null; 
+            if (!wasPaused) { isPaused = false; scene.physics.resume(); }
         });
     },
 
     showSettings: function(scene) {
         if (this.container) this.container.destroy();
-        this.container = scene.add.container(0, 0).setDepth(1000);
+        this.container = scene.add.container(0, 0).setDepth(2000);
+        
+        const bg = scene.add.rectangle(180, 320, 300, 400, 0x000000, 0.9).setStrokeStyle(3, 0xffffff);
+        const title = scene.add.text(180, 160, 'НАСТРОЙКИ', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        
+        const soundBtn = scene.add.rectangle(180, 230, 220, 40, 0x444444).setInteractive();
+        const soundTxt = scene.add.text(180, 230, `ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
+        soundBtn.on('pointerdown', () => {
+            isSoundOn = !isSoundOn;
+            scene.sound.mute = !isSoundOn;
+            soundTxt.setText(`ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`);
+            saveData();
+        });
 
-        const bg = scene.add.rectangle(180, 320, 340, 540, 0x000000, 0.95).setStrokeStyle(4, 0xffffff);
-        const title = scene.add.text(180, 75, 'НАСТРОЙКИ', { fontSize: '22px', fontWeight: 'bold', fill: '#fff' }).setOrigin(0.5);
-        this.container.add([bg, title]);
-
-        // Вкладки
-        this.settingsTab = 'general'; // По умолчанию 'Общие'
-        const tabGeneral = scene.add.text(90, 110, 'ОБЩИЕ', { fontSize: '18px', fill: this.settingsTab === 'general' ? '#fff' : '#aaa' }).setOrigin(0.5).setInteractive();
-        tabGeneral.on('pointerdown', () => { this.settingsTab = 'general'; this.showSettings(scene); });
-        const tabSocial = scene.add.text(180, 110, 'СОЦ.', { fontSize: '18px', fill: this.settingsTab === 'social' ? '#fff' : '#aaa' }).setOrigin(0.5).setInteractive();
-        tabSocial.on('pointerdown', () => { this.settingsTab = 'social'; this.showSettings(scene); });
-        const tabRating = scene.add.text(270, 110, 'РЕЙТИНГ', { fontSize: '18px', fill: this.settingsTab === 'rating' ? '#fff' : '#aaa' }).setOrigin(0.5).setInteractive();
-        tabRating.on('pointerdown', () => { this.settingsTab = 'rating'; this.showSettings(scene); });
-        this.container.add([tabGeneral, tabSocial, tabRating]);
-
-        // Контент вкладок
-        if (this.settingsTab === 'general') {
-            const soundBtn = scene.add.rectangle(180, 160, 220, 40, isSoundOn ? 0x00aa00 : 0xaa0000).setInteractive();
-            const soundTxt = scene.add.text(180, 160, `ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            soundBtn.on('pointerdown', () => { isSoundOn = !isSoundOn; saveData(); this.showSettings(scene); });
-
-            const resetBtn = scene.add.rectangle(180, 210, 220, 40, 0xaa0000).setInteractive();
-            const resetTxt = scene.add.text(180, 210, 'СБРОС ПРОГРЕССА', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            resetBtn.on('pointerdown', () => {
-                this.showConfirm(scene, 'СБРОСИТЬ ВЕСЬ ПРОГРЕСС?', () => {
-                    localStorage.clear(); location.reload();
-                });
+        const resetBtn = scene.add.rectangle(180, 290, 220, 40, 0x660000).setInteractive();
+        const resetTxt = scene.add.text(180, 290, 'СБРОС ПРОГРЕССА', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+        resetBtn.on('pointerdown', () => {
+            this.showConfirm(scene, "Сбросить весь прогресс?", () => {
+                localStorage.clear();
+                location.reload();
             });
+        });
 
-            const infoBtn = scene.add.rectangle(180, 260, 220, 40, 0x444444).setInteractive();
-            const infoTxt = scene.add.text(180, 260, 'ИНСТРУКЦИЯ', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            infoBtn.on('pointerdown', () => {
-                this.showInfo(scene, "ИНСТРУКЦИЯ\n\n1. Сбивай помидоры кликом.\n2. Лови рыбок для магазина.\n3. Каждые 500 очков - новый мем.\n4. Валерьянка спасет при проигрыше.\n5. Покупай скины в магазине!");
-            });
+        const infoBtn = scene.add.rectangle(180, 350, 220, 40, 0x006600).setInteractive();
+        const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+        infoBtn.on('pointerdown', () => {
+            this.showInfo(scene, "ИНСТРУКЦИЯ\n\n1. Сбивай помидоры кликом.\n2. Лови рыбок для магазина.\n3. Каждые 500 очков - новый мем.\n4. Валерьянка спасет при проигрыше.\n5. Покупай скины в магазине!");
+        });
 
-            const author = scene.add.text(180, 310, 'Автор: @AlexCosta1978', { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
-
-            this.container.add([soundBtn, soundTxt, resetBtn, resetTxt, infoBtn, infoTxt, author]);
-        } else if (this.settingsTab === 'social') {
-            const shareGameBtn = scene.add.rectangle(180, 160, 220, 40, 0x006600).setInteractive();
-            const shareGameTxt = scene.add.text(180, 160, 'РЕКОМЕНДОВАТЬ ДРУГУ', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            shareGameBtn.on('pointerdown', () => {
-                if (referralCount < 50) {
-                    referralCount++;
-                    valerianStock++;
-                    valStockText.setText(valerianStock);
-                    saveData();
-                }
-                tg.shareUrl(URL, 'Играй в Cat vs Tomato! Юморная игра с котиками и мемами против помидоров.');
-            });
-
-            const dailyBtn = scene.add.rectangle(180, 210, 220, 40, canClaimDaily() ? 0x00aa00 : 0xaaaaaa).setInteractive();
-            const dailyTxt = scene.add.text(180, 210, canClaimDaily() ? 'ЗАБРАТЬ ЕЖЕДНЕВНЫЙ БОНУС (+1 валерьянка)' : 'БОНУС УЖЕ ЗАБРАН', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            dailyBtn.on('pointerdown', () => {
-                if (canClaimDaily()) {
-                    valerianStock++;
-                    lastDaily = Date.now();
-                    valStockText.setText(valerianStock);
-                    saveData();
-                    this.showSettings(scene);
-                }
-            });
-
-            const referralInfo = scene.add.text(180, 260, `Валерьянок за друзей: ${referralCount}/50`, { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
-
-            this.container.add([shareGameBtn, shareGameTxt, dailyBtn, dailyTxt, referralInfo]);
-        } else if (this.settingsTab === 'rating') {
-            const top1 = scene.add.text(180, 160, `1. ${topScores[0]} очков`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            const top2 = scene.add.text(180, 210, `2. ${topScores[1]} очков`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            const top3 = scene.add.text(180, 260, `3. ${topScores[2]} очков`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-
-            const shareTopBtn = scene.add.rectangle(180, 310, 220, 40, 0x006600).setInteractive();
-            const shareTopTxt = scene.add.text(180, 310, 'ПОДЕЛИТЬСЯ РЕЙТИНГОМ', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
-            shareTopBtn.on('pointerdown', () => {
-                const topText = `Мой топ в Cat vs Tomato:\n1. ${topScores[0]}\n2. ${topScores[1]}\n3. ${topScores[2]}\nЯ спас котика от помидоров! Играй: ${URL}`;
-                tg.share({ text: topText });
-            });
-
-            this.container.add([top1, top2, top3, shareTopBtn, shareTopTxt]);
-        }
-
+        const author = scene.add.text(180, 410, 'Автор: @AlexCosta1978', { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
         const closeBtn = scene.add.text(180, 470, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setInteractive();
         closeBtn.on('pointerdown', () => this.container.destroy());
 
-        this.container.add(closeBtn);
+        this.container.add([bg, title, soundBtn, soundTxt, resetBtn, resetTxt, infoBtn, infoTxt, author, closeBtn]);
     },
 
     showConfirm: function(scene, text, onConfirm) {
