@@ -39,19 +39,30 @@ function showTelegramAds(callback) {
 function shareMeme(memeText) {
     const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
+    const tgUrl = `tg://msg_url?url=&text=${encodeURIComponent(shareText)}`; // Прямой протокол для Десктопа
 
-    // Пытаемся использовать официальный метод Telegram WebApp (идеально для ПК и Телефона)
     try {
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-            // Этот метод заставляет Telegram Desktop открыть окно выбора чата ВНУТРИ приложения
+            // Если десктоп не реагирует на https ссылку, попробуй скормить ему tg:// версию
+            // Но обычно https версии через openTelegramLink достаточно.
             window.Telegram.WebApp.openTelegramLink(shareUrl);
-        } else {
-            // Если игра открыта просто в браузере, используем стандартное окно
-            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        } 
+        else {
+            const win = window.open(shareUrl, '_blank', 'noopener,noreferrer,width=600,height=700');
+            
+            if (!win) {
+                // Если Десктоп заблокировал окно, Iframe с tg:// ссылкой часто его "будит"
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = tgUrl; // Используем tg:// здесь для принудительного вызова
+                document.body.appendChild(iframe);
+                setTimeout(() => iframe.remove(), 100);
+                
+                // Alert оставляем, чтобы понять, дошли ли мы до этой точки
+                console.log("Окно заблокировано, вызван Iframe");
+            }
         }
     } catch (e) {
-        console.error("Ошибка при попытке поделиться:", e);
-        // Резервный метод на крайний случай
         window.open(shareUrl, '_blank');
     }
 }
