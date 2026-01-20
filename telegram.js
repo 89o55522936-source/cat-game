@@ -38,18 +38,31 @@ function showTelegramAds(callback) {
 // ========= НОВАЯ ФУНКЦИЯ ДЛЯ ПОДЕЛИТЬСЯ МЕМОМ =========
 function shareMeme(memeText) {
     const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
-    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
+    
+    // Чистые ссылки без дублирования параметров
+    const telegramAppUrl = `tg://msg?text=${encodeURIComponent(shareText)}`;
+    const telegramWebUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
 
-    if (typeof tg !== 'undefined' && tg.openLink) {
-        // Это самый универсальный метод для Desktop и Mobile.
-        // Он откроет окно выбора чата, не закрывая твою игру.
-        tg.openLink(shareUrl); 
+    // Проверяем наличие SDK Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+        // Внутри Telegram: используем встроенный метод, чтобы не выходить из приложения
+        window.Telegram.WebApp.openTelegramLink(telegramWebUrl);
     } else {
-        // Если вдруг скрипт Telegram не загрузился, используем стандартный браузерный метод.
-        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        // Вне Telegram (Chrome/Edge): используем невидимый iframe для вызова Desktop-версии
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = telegramAppUrl;
+        document.body.appendChild(iframe);
+        
+        // Быстрая очистка и открытие веб-версии в новом окне как подстраховка
+        setTimeout(() => {
+            iframe.remove();
+            window.open(telegramWebUrl, '_blank', 'noopener,noreferrer,width=600,height=700');
+        }, 100);
     }
 }
 // ======================================================
+
 
 
 
