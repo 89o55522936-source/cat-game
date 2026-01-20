@@ -43,13 +43,15 @@ function shareMeme(memeText) {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     if (isMobile && window.Telegram?.WebApp?.openTelegramLink) {
+        // НА ТЕЛЕФОНЕ: По-прежнему открываем нативный шаринг
         window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
-        showCopyDialog(shareText, shareUrl);
+        // НА КОМПЬЮТЕРЕ: Показываем окно для копирования ЧИСТОГО ТЕКСТА
+        showCopyDialog(shareText);
     }
 }
 
-function showCopyDialog(text, url) {
+function showCopyDialog(text) {
     if (document.getElementById('meme-copy-dialog')) return;
 
     const dialog = document.createElement('div');
@@ -64,24 +66,22 @@ function showCopyDialog(text, url) {
     
     dialog.innerHTML = `
         <b style="color: #00ff00; font-size: 18px; display: block; margin-bottom: 10px;">📱 ПОДЕЛИТЬСЯ МЕМОМ</b>
-        <p style="background: #000; padding: 12px; border-radius: 8px; font-size: 14px; margin: 15px 0; border: 1px solid #333; line-height: 1.4; user-select: text;">
+        <p style="background: #000; padding: 12px; border-radius: 8px; font-size: 14px; margin: 15px 0; border: 1px solid #333; line-height: 1.4; user-select: text; text-align: left;">
             ${text}
         </p>
         <div style="font-size: 12px; color: #aaa; margin-bottom: 15px;">
-            Нажмите кнопку ниже, чтобы скопировать ссылку для Telegram
+            Нажмите кнопку ниже, чтобы скопировать текст и отправить его другу в Telegram
         </div>
-        <button id="copyBtn" style="background: #00aa00; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-bottom: 10px;">📋 КОПИРОВАТЬ ССЫЛКУ</button>
-        <div style="font-size: 11px; color: #888; margin-bottom: 10px;">
-            Или откройте: <a href="${url}" target="_blank" style="color: #00aaff; text-decoration: underline;">Telegram Web</a>
-        </div>
-        <button id="closeBtn" style="background: transparent; color: #ff4444; border: none; cursor: pointer; font-size: 12px; margin-top: 5px;">[ ЗАКРЫТЬ ]</button>
+        <button id="copyBtn" style="background: #00aa00; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; margin-bottom: 15px;">📋 КОПИРОВАТЬ ТЕКСТ</button>
+        <button id="closeBtn" style="background: transparent; color: #ff4444; border: none; cursor: pointer; font-size: 12px;">[ ЗАКРЫТЬ ]</button>
     `;
     
     document.body.appendChild(dialog);
     
     document.getElementById('copyBtn').onclick = function() {
-        navigator.clipboard.writeText(url).then(() => {
-            this.textContent = '✅ ССЫЛКА СКОПИРОВАНА!';
+        // КОПИРУЕМ ЧИСТЫЙ ТЕКСТ (без кодировок и https://t.me/...)
+        navigator.clipboard.writeText(text).then(() => {
+            this.textContent = '✅ ТЕКСТ СКОПИРОВАН!';
             this.style.background = '#008800';
             setTimeout(() => { if(dialog.parentNode) document.body.removeChild(dialog); }, 1200);
         });
