@@ -41,13 +41,12 @@ function shareMeme(memeText) {
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
 
     if (tg && tg.openLink) {
-        // Используем openLink для всех платформ — не закрывает игру
-        tg.openLink(shareUrl);
+        tg.openLink(shareUrl);  // Работает везде: не закрывает Mini App
     } else {
-        // Fallback для браузера или если API недоступно
-        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');  // Fallback для браузера
     }
 }
 // ======================================================
+
 
 
