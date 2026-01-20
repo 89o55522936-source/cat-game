@@ -38,32 +38,21 @@ function showTelegramAds(callback) {
 // ========= НОВАЯ ФУНКЦИЯ ДЛЯ ПОДЕЛИТЬСЯ МЕМОМ =========
 function shareMeme(memeText) {
     const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
-    
-    // Чистые ссылки без дублирования параметров
-    const telegramAppUrl = `tg://msg?text=${encodeURIComponent(shareText)}`;
-    const telegramWebUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
 
-    // Проверяем наличие SDK Telegram WebApp
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-        // Внутри Telegram: используем встроенный метод, чтобы не выходить из приложения
-        window.Telegram.WebApp.openTelegramLink(telegramWebUrl);
-    } else {
-        // Вне Telegram (Chrome/Edge): используем невидимый iframe для вызова Desktop-версии
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = telegramAppUrl;
-        document.body.appendChild(iframe);
-        
-        // Быстрая очистка и открытие веб-версии в новом окне как подстраховка
-        setTimeout(() => {
-            iframe.remove();
-            window.open(telegramWebUrl, '_blank', 'noopener,noreferrer,width=600,height=700');
-        }, 100);
+    // Пытаемся использовать официальный метод Telegram WebApp (идеально для ПК и Телефона)
+    try {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+            // Этот метод заставляет Telegram Desktop открыть окно выбора чата ВНУТРИ приложения
+            window.Telegram.WebApp.openTelegramLink(shareUrl);
+        } else {
+            // Если игра открыта просто в браузере, используем стандартное окно
+            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        }
+    } catch (e) {
+        console.error("Ошибка при попытке поделиться:", e);
+        // Резервный метод на крайний случай
+        window.open(shareUrl, '_blank');
     }
 }
 // ======================================================
-
-
-
-
-
