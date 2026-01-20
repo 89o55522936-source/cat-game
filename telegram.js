@@ -28,10 +28,17 @@ function showTelegramAds(callback) {
         })
         .catch((error) => {
             // Пользователь закрыл рекламу раньше или произошла ошибка
-            // error может содержать информацию об ошибке (опционально для логов)
             if (error) {
                 console.warn("Adsgram rejected or error:", error);
             }
             callback(false);
         });
 }
+
+// ========= НОВАЯ ФУНКЦИЯ ДЛЯ ПОДЕЛИТЬСЯ МЕМОМ =========
+function shareMeme(memeText) {
+    const shareText = "Сегодня в юморной игре Котики против томатов получил такой мем: " + memeText;
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
+    tg.openTelegramLink(shareUrl);
+}
+// ======================================================
