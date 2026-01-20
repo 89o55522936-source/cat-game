@@ -39,17 +39,26 @@ function showTelegramAds(callback) {
 function shareMeme(memeText) {
     const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
-    
-    // Проверяем платформу Telegram WebApp
-    if (tg && tg.platform === 'tdesktop') {
-        // Telegram Desktop — открываем в системном браузере
-        window.open(shareUrl, '_blank', 'noopener,noreferrer');
-    } else if (tg && tg.openTelegramLink) {
-        // Мобильный Telegram (Android/iOS) — нативный шаринг
+
+    // 1. ТОЛЬКО мобильный Telegram использует нативный метод
+    if (tg && tg.openTelegramLink && tg.platform !== 'tdesktop') {
         tg.openTelegramLink(shareUrl);
-    } else {
-        // Обычный браузер или неизвестная платформа — fallback
-        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        return; // Игра остаётся открытой
+    }
+
+    // 2. Для Telegram Desktop и браузера — открываем в новом окне/вкладке
+    // Параметры окна делают его похожим на нативное
+    const shareWindow = window.open(
+        shareUrl, 
+        '_blank', 
+        'noopener,noreferrer,width=600,height=700,left=100,top=100'
+    );
+
+    // 3. Если окно не открылось (попап-блокер)
+    if (!shareWindow || shareWindow.closed || typeof shareWindow.closed === 'undefined') {
+        // Крайний случай — перенаправляем текущую вкладку
+        window.location.href = shareUrl;
     }
 }
 // ======================================================
+
