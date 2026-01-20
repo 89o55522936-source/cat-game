@@ -227,8 +227,16 @@ const UI = {
         const infoBtn = scene.add.rectangle(180, 350, 220, 40, 0x006600).setInteractive();
         const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
         infoBtn.on('pointerdown', () => {
-            this.showInfo(scene, "ИНСТРУКЦИЯ\n\n1. Сбивай помидоры кликом.\n2. Лови рыбок для магазина.\n3. Каждые 500 очков - новый мем.\n4. Валерьянка спасет при проигрыше.\n5. Покупай скины в магазине!");
-        });
+    this.showInfo(scene, 
+        "1. Кликай по падающим помидорам\n" +
+        "2. Рыбки котику для магазина\n" + 
+        "3. Собирай мемы каждые 500 очков\n" +
+        "4. Валерьянка спасет при проигрыше\n" +
+        "5. Делись мемами — получай валерьянку\n" +
+        "6. Каждый день одна валерьянка бонусом\n" +
+        "7. Бей свой рекорд — обновляй ТОП-1"
+    );
+});
 
         const author = scene.add.text(180, 410, 'Автор: @AlexCosta1978', { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
         const closeBtn = scene.add.text(180, 470, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setInteractive();
@@ -267,3 +275,4 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
