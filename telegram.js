@@ -37,8 +37,9 @@ function showTelegramAds(callback) {
 
 // ========= НОВАЯ ФУНКЦИЯ ДЛЯ ПОДЕЛИТЬСЯ МЕМОМ =========
 function shareMeme(memeText) {
-    const shareText = "Сегодня в юморной игре Котики против томатов получил такой мем: " + memeText;
+    const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
     tg.openTelegramLink(shareUrl);
 }
 // ======================================================
+
