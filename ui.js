@@ -62,6 +62,10 @@ const UI = {
     },
 
     drawGrid: function(scene, container, seenMemes, allMemes) {
+        // ========= ФИКС БАГА: ФЛАГ МНОЖЕСТВЕННОГО ОТКРЫТИЯ =========
+        let isMemeOpen = false;
+        // ===========================================================
+        
         const startX = 65, startY = 135, stepX = 75, stepY = 75, cols = 4;
         for (let i = 0; i < this.itemsPerPage; i++) {
             const index = (this.currentPage * this.itemsPerPage) + i;
@@ -69,23 +73,58 @@ const UI = {
             const x = startX + (i % cols) * stepX;
             const y = startY + Math.floor(i / cols) * stepY;
             const isOpened = seenMemes.has(index);
-            const boxColor = isOpened ? 0x00ff00 : 0x333333;
+            const boxColor = isOpened ? 0x00ff00 : 0x444444;
             const box = scene.add.rectangle(x, y, 60, 60, boxColor).setStrokeStyle(2, 0xffffff).setInteractive();
-            const numText = scene.add.text(x, y, index + 1, { fontSize: '22px', fill: isOpened ? '#000' : '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+            const numText = scene.add.text(x, y, index + 1, { fontSize: '16px', fill: isOpened ? '#000' : '#fff' }).setOrigin(0.5);
             container.add([box, numText]);
-            if (isOpened) box.on('pointerdown', () => this.showMemeDetail(scene, allMemes[index]));
+            
+            if (isOpened) box.on('pointerdown', () => {
+                // ========= ПРЕДОТВРАЩЕНИЕ МНОЖЕСТВЕННОГО ОТКРЫТИЯ =========
+                if (isMemeOpen) return;
+                isMemeOpen = true;
+                // =========================================================
+                
+                // ========= ОРИГИНАЛЬНЫЙ КОД ОКНА МЕМА С КНОПКАМИ =========
+                const detail = scene.add.container(0, 0).setDepth(1100);
+                const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
+                const back = scene.add.rectangle(180, 320, 310, 200, 0x111111, 0.98); // ОРИГИНАЛЬНЫЙ размер 320x200
+                const memeText = scene.add.text(180, 300, allMemes[index], { fontSize: '18px', fill: '#fff', align: 'center', wordWrap: { width: 270 } }).setOrigin(0.5);
+                
+                // ========= КНОПКА "ПОДЕЛИТЬСЯ" (НОВАЯ ПО ТЗ) =========
+                const shareBtn = scene.add.rectangle(100, 380, 100, 40, 0x0066cc).setInteractive();
+                const shareTxt = scene.add.text(100, 380, 'ПОДЕЛИТЬСЯ', { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
+                // =====================================================
+                
+                // ========= КНОПКА "ОК" (ПЕРЕИМЕНОВАНА ПО ТЗ) =========
+                const closeBtn = scene.add.rectangle(260, 380, 80, 40, 0x00aa00).setInteractive();
+                const closeTxt = scene.add.text(260, 380, 'ОК', { fontSize: '14px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+                // =====================================================
+                
+                detail.add([dim, back, memeText, shareBtn, shareTxt, closeBtn, closeTxt]);
+                
+                // ========= ОБРАБОТЧИК "ПОДЕЛИТЬСЯ" =========
+                shareBtn.on('pointerdown', () => {
+                    // Вызов функции из telegram.js
+                    shareMeme(allMemes[index]);
+                    
+                    // Начисление бонуса (максимум 10 раз)
+                    if (shareCount < 10) {
+                        shareCount++;
+                        valerianStock++;
+                        valStockText.setText(valerianStock);
+                        saveData();
+                    }
+                });
+                
+                // ========= ОБРАБОТЧИК "ОК" (СО СБРОСОМ ФЛАГА) =========
+                closeBtn.on('pointerdown', () => {
+                    detail.destroy();
+                    // ========= СБРОС ФЛАГА ПРИ ЗАКРЫТИИ =========
+                    isMemeOpen = false;
+                    // ============================================
+                });
+            });
         }
-    },
-
-    showMemeDetail: function(scene, text) {
-        const detail = scene.add.container(0, 0).setDepth(1100);
-        const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
-        const back = scene.add.rectangle(180, 320, 310, 320, 0x111111, 0.98).setStrokeStyle(3, 0x00ff00);
-        const memeText = scene.add.text(180, 270, text, { fontSize: '20px', fill: '#fff', align: 'center', wordWrap: { width: 270 } }).setOrigin(0.5);
-        const closeBtn = scene.add.rectangle(180, 420, 150, 45, 0x770000).setInteractive();
-        const closeTxt = scene.add.text(180, 420, 'ПОНЯТНО', { fontSize: '16px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
-        detail.add([dim, back, memeText, closeBtn, closeTxt]);
-        closeBtn.on('pointerdown', () => detail.destroy());
     },
 
     showShop: function(scene) {
@@ -162,8 +201,10 @@ const UI = {
         if (this.container) this.container.destroy();
         this.container = scene.add.container(0, 0).setDepth(2000);
         
-        const bg = scene.add.rectangle(180, 320, 300, 400, 0x000000, 0.9).setStrokeStyle(3, 0xffffff);
-        const title = scene.add.text(180, 160, 'НАСТРОЙКИ', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        const bg = scene.add.rectangle(180, 320, 300, 360, 0x000000, 0.9).setStrokeStyle(3, 0xffffff);
+        // ========= ЗАГОЛОВОК "ТОП-1" ВМЕСТО "НАСТРОЙКИ" =========
+        const title = scene.add.text(180, 160, 'ТОП-1: ' + bestScore, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        // ========================================================
         
         const soundBtn = scene.add.rectangle(180, 230, 220, 40, 0x444444).setInteractive();
         const soundTxt = scene.add.text(180, 230, `ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
