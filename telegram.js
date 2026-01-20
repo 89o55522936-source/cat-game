@@ -39,7 +39,18 @@ function showTelegramAds(callback) {
 function shareMeme(memeText) {
     const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
-    tg.openTelegramLink(shareUrl);
+    
+    // РАБОТА И В ДЕСКТОПЕ И В МОБИЛЬНОМ
+    try {
+        if (typeof tg !== 'undefined' && tg.openTelegramLink) {
+            tg.openTelegramLink(shareUrl);  // Для мобильного Telegram
+        } else {
+            window.open(shareUrl, '_blank', 'noopener,noreferrer');  // Для десктопа/браузера
+        }
+    } catch (error) {
+        window.open(shareUrl, '_blank');  // Запасной вариант
+    }
 }
 // ======================================================
+
 
