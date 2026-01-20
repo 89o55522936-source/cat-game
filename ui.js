@@ -216,7 +216,7 @@ const UI = {
         });
 
         const resetBtn = scene.add.rectangle(180, 290, 220, 40, 0x660000).setInteractive();
-        const resetTxt = scene.add.text(180, 290, 'СБРОС ПРОГРЕССА', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+        const resetTxt = scene.add.text(180, 290, 'СБРОС ПРОГРЕССА', { fontSize: '15px', fill: '#fff' }).setOrigin(0.5);
         resetBtn.on('pointerdown', () => {
             this.showConfirm(scene, "Сбросить весь прогресс?", () => {
                 localStorage.clear();
@@ -225,7 +225,7 @@ const UI = {
         });
 
         const infoBtn = scene.add.rectangle(180, 350, 220, 40, 0x006600).setInteractive();
-        const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+        const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '15px', fill: '#fff' }).setOrigin(0.5);
         infoBtn.on('pointerdown', () => {
     this.showInfo(scene, 
         "1. Кликай по падающим помидорам\n" +
@@ -275,4 +275,5 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
 
