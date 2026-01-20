@@ -40,25 +40,14 @@ function shareMeme(memeText) {
     const shareText = "Сегодня в юморной игре «Котики против томатов» получил такой мем: " + memeText + " Играй @CatMemeGame_bot";
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
 
-    // 1. ТОЛЬКО мобильный Telegram использует нативный метод
-    if (tg && tg.openTelegramLink && tg.platform !== 'tdesktop') {
-        tg.openTelegramLink(shareUrl);
-        return; // Игра остаётся открытой
-    }
-
-    // 2. Для Telegram Desktop и браузера — открываем в новом окне/вкладке
-    // Параметры окна делают его похожим на нативное
-    const shareWindow = window.open(
-        shareUrl, 
-        '_blank', 
-        'noopener,noreferrer,width=600,height=700,left=100,top=100'
-    );
-
-    // 3. Если окно не открылось (попап-блокер)
-    if (!shareWindow || shareWindow.closed || typeof shareWindow.closed === 'undefined') {
-        // Крайний случай — перенаправляем текущую вкладку
-        window.location.href = shareUrl;
+    if (tg && tg.openLink) {
+        // Используем openLink для всех платформ — не закрывает игру
+        tg.openLink(shareUrl);
+    } else {
+        // Fallback для браузера или если API недоступно
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
     }
 }
 // ======================================================
+
 
