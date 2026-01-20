@@ -31,6 +31,12 @@ let cat, scoreText, livesText, fishText, valStockText, levelText, startBtn, meme
 let gameDifficulty = 1.0; 
 let lastSpawnTime = 0, tomatoesGroup;
 
+// ========= НОВЫЕ ПЕРЕМЕННЫЕ =========
+let shareCount = 0;
+let bestScore = 0;
+let lastDailyTime = 0;
+// ===================================
+
 const memes = [
     "Я не толстый, я томато-резистентный!",
     "Помидоры падают, а я лежу. Жизнь кота — сплошной релакс!",
@@ -63,7 +69,12 @@ function saveData() {
         bg: currentBgKey,
         ownedCats: ownedCats,
         ownedBgs: ownedBgs,
-        sound: isSoundOn
+        sound: isSoundOn,
+        // ========= НОВЫЕ ПОЛЯ ДЛЯ СОХРАНЕНИЯ =========
+        shareCount: shareCount,
+        bestScore: bestScore,
+        lastDaily: lastDailyTime
+        // =============================================
     };
     localStorage.setItem('cat_game_save_v2', JSON.stringify(data));
 }
@@ -80,7 +91,21 @@ function loadData() {
         ownedCats = data.ownedCats || ['cat'];
         ownedBgs = data.ownedBgs || ['bg_game'];
         isSoundOn = (data.sound !== undefined) ? data.sound : true;
+        // ========= ЗАГРУЗКА НОВЫХ ПЕРЕМЕННЫХ =========
+        shareCount = data.shareCount || 0;
+        bestScore = data.bestScore || 0;
+        lastDailyTime = data.lastDaily || 0;
+        // =============================================
     }
+    
+    // ========= АВТОМАТИЧЕСКИЙ БОНУС ЗА ВХОД =========
+    const now = Date.now();
+    if ((now - lastDailyTime) >= 86400000) {
+        lastDailyTime = now;
+        valerianStock++;
+        saveData(); // Сохраняем сразу
+    }
+    // ================================================
 }
 
 function preload() {
@@ -272,6 +297,14 @@ function loseLife() {
 
 function showGameOver() {
     gameRunning = false; this.physics.pause(); this.sound.play('loss');
+    
+    // ========= ОБНОВЛЕНИЕ ЛУЧШЕГО РЕКОРДА =========
+    if (score > bestScore) {
+        bestScore = score;
+        saveData();
+    }
+    // =============================================
+    
     const over = this.add.container(0, 0).setDepth(600);
     over.add(this.add.rectangle(180, 320, 360, 640, 0x000000, 0.7));
     const btn = this.add.rectangle(180, 320, 280, 60, 0x9400d3).setInteractive();
