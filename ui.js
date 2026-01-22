@@ -238,7 +238,7 @@ const UI = {
     );
 });
 
-        const author = scene.add.text(180, 410, 'Автор: @AlexCosta1978', { fontSize: '14px', fill: '#aaa' }).setOrigin(0.5);
+        const author = scene.add.text(180, 410, 'Автор: zodiac', { fontSize: '15px', fill: '#aaa' }).setOrigin(0.5);
         const closeBtn = scene.add.text(180, 470, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setInteractive();
         closeBtn.on('pointerdown', () => this.container.destroy());
 
@@ -275,5 +275,6 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
 
 
