@@ -328,8 +328,8 @@ function showGameOver() {
     const over = this.add.container(0, 0).setDepth(600);
     over.add(this.add.rectangle(180, 320, 360, 640, 0x000000, 0.7));
     const btn = this.add.rectangle(180, 320, 280, 60, 0x9400d3).setInteractive();
-    let lblText = (valerianStock > 0) ? `ИСПОЛЬЗОВАТЬ ВАЛЕРЬЯНКУ (${valerianStock})` : "НЕТ ВАЛЕРЬЯНКИ! ЗАПАСИСЬ!";
-    const btnTxt = this.add.text(180, 320, lblText, { fontSize: '16px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+    let lblText = (valerianStock > 0) ? `ДАТЬ ВАЛЕРЬЯНКУ (${valerianStock})` : "НЕТ ВАЛЕРЬЯНКИ! ЗАПАСИСЬ!";
+    const btnTxt = this.add.text(180, 320, lblText, { fontSize: '15px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
     over.add([btn, btnTxt]);
     const rst = this.add.text(180, 400, '🔄 СНАЧАЛА', { fontSize: '22px', fill: '#fff' }).setOrigin(0.5).setInteractive();
     over.add(rst);
@@ -363,4 +363,5 @@ function togglePause() {
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
 }
+
 
