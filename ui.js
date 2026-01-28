@@ -11,15 +11,15 @@ const UI = {
             { id: 'cat', name: 'Белый', price: 0 },
             { id: 'cat_orange', name: 'Рыжий', price: 10 },
             { id: 'cat_grey', name: 'Серый', price: 30 },
-            { id: 'cat_black', name: 'Черный', price: 70 },
-            { id: 'cat_spotted', name: 'Пятнистый', price: 90 } // НОВЫЙ СКИН
+            { id: 'cat_black', name: 'Черный', price: 1 },
+            { id: 'cat_spotted', name: 'Пятнистый', price: 1 } // НОВЫЙ СКИН
         ],
         backgrounds: [
             { id: 'bg_game', name: 'Комната', price: 0 },
             { id: 'bg_garden', name: 'Сад', price: 10 },
             { id: 'bg_kitchen', name: 'Кухня', price: 40 },
             { id: 'bg_space', name: 'Космос', price: 80 },
-            { id: 'bg_savannah', name: 'Саванна', price: 100 } // НОВЫЙ ФОН
+            { id: 'bg_savannah', name: 'Саванна', price: 1 } // НОВЫЙ ФОН
         ]
     },
 
@@ -277,6 +277,7 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
 
 
 
