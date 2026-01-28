@@ -135,6 +135,7 @@ function preload() {
     this.load.image('bg_garden', 'assets/backgrounds/bg_garden.png');
     this.load.image('bg_kitchen', 'assets/backgrounds/bg_kitchen.png');
     this.load.image('bg_space', 'assets/backgrounds/bg_space.png');
+    this.load.image('bg_savannah', 'assets/backgrounds/bg_savannah.png'); // НОВЫЙ ФОН
 
     // Спрайты (Белый)
     this.load.image('cat_sleep', 'assets/sprites/cat_sleep.png');
@@ -152,6 +153,10 @@ function preload() {
     this.load.image('cat_black_sleep', 'assets/sprites/cat_black_sleep.png');
     this.load.image('cat_black_angry', 'assets/sprites/cat_black_angry.png');
     this.load.image('cat_black_happy', 'assets/sprites/cat_black_happy.png');
+    // Пятнистый (НОВЫЙ СКИН)
+    this.load.image('cat_spotted_sleep', 'assets/sprites/cat_spotted_sleep.png');
+    this.load.image('cat_spotted_angry', 'assets/sprites/cat_spotted_angry.png');
+    this.load.image('cat_spotted_happy', 'assets/sprites/cat_spotted_happy.png');
 
     this.load.image('tomato', 'assets/sprites/tomato.png');
     this.load.image('icon_valerian', 'assets/sprites/icon_valerian.png');
@@ -363,5 +368,6 @@ function togglePause() {
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
 }
+
 
 
