@@ -287,7 +287,7 @@ const UI = {
         const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '15px', fill: '#fff' }).setOrigin(0.5);
         infoBtn.on('pointerdown', () => {
             this.showInfo(scene, 
-                "1. Кликай только по падающим помидорам\n" + 
+                "1. Кликай по помидорам, а рыбки — котику для магазина\n" + 
                 "2. Собирай мемы каждые 500 очков\n" +
                 "3. Валерьянка спасет при проигрыше\n" +
                 "4. Делись мемами — получай валерьянку\n" +
@@ -334,3 +334,4 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
