@@ -277,10 +277,3 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
-
-
-
-
-
-
-
