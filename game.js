@@ -368,6 +368,3 @@ function togglePause() {
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
 }
-
-
-
