@@ -1,8 +1,9 @@
-// ui.js — Версия v1.6 (Фикс UI и кастомные окна)
+// ui.js — Версия v1.7 (Фикс флага isMemeOpen и инструкции)
 const UI = {
     currentPage: 0,
     itemsPerPage: 20,
     container: null,
+    isMemeOpen: false, // ВЫНЕСЕН ГЛОБАЛЬНЫЙ ФЛАГ
 
     // --- МАГАЗИН (ЦЕНЫ ТУТ) ---
     shopTab: 'cats',
@@ -12,14 +13,14 @@ const UI = {
             { id: 'cat_orange', name: 'Рыжий', price: 10 },
             { id: 'cat_grey', name: 'Серый', price: 30 },
             { id: 'cat_black', name: 'Черный', price: 70 },
-            { id: 'cat_spotted', name: 'Пятнистый', price: 130 } // НОВЫЙ СКИН
+            { id: 'cat_spotted', name: 'Пятнистый', price: 130 }
         ],
         backgrounds: [
             { id: 'bg_game', name: 'Комната', price: 0 },
             { id: 'bg_garden', name: 'Сад', price: 10 },
             { id: 'bg_kitchen', name: 'Кухня', price: 40 },
             { id: 'bg_space', name: 'Космос', price: 80 },
-            { id: 'bg_savannah', name: 'Саванна', price: 140 } // НОВЫЙ ФОН
+            { id: 'bg_savannah', name: 'Саванна', price: 140 }
         ]
     },
 
@@ -38,7 +39,7 @@ const UI = {
         const title = scene.add.text(180, 75, 'КОЛЛЕКЦИЯ МЕМОВ', { fontSize: '22px', fontWeight: 'bold', fill: '#fff' }).setOrigin(0.5);
         this.container.add([bg, title]);
 
-        this.drawGrid(scene, this.container, seenMemes, allMemes);
+        this.drawGrid(scene, this.container, seenMemes, allMemes, wasPausedBefore);
 
         const totalPages = Math.ceil(allMemes.length / this.itemsPerPage);
         const navY = 495;
@@ -63,11 +64,7 @@ const UI = {
         });
     },
 
-    drawGrid: function(scene, container, seenMemes, allMemes) {
-        // ========= ФИКС БАГА: ФЛАГ МНОЖЕСТВЕННОГО ОТКРЫТИЯ =========
-        let isMemeOpen = false;
-        // ===========================================================
-        
+    drawGrid: function(scene, container, seenMemes, allMemes, wasPausedBefore) {
         const startX = 65, startY = 135, stepX = 75, stepY = 75, cols = 4;
         for (let i = 0; i < this.itemsPerPage; i++) {
             const index = (this.currentPage * this.itemsPerPage) + i;
@@ -80,52 +77,114 @@ const UI = {
             const numText = scene.add.text(x, y, index + 1, { fontSize: '16px', fill: isOpened ? '#000' : '#fff' }).setOrigin(0.5);
             container.add([box, numText]);
             
-            if (isOpened) box.on('pointerdown', () => {
-                // ========= ПРЕДОТВРАЩЕНИЕ МНОЖЕСТВЕННОГО ОТКРЫТИЯ =========
-                if (isMemeOpen) return;
-                isMemeOpen = true;
-                // =========================================================
-                
-                // ========= ОРИГИНАЛЬНЫЙ КОД ОКНА МЕМА С КНОПКАМИ =========
-                const detail = scene.add.container(0, 0).setDepth(1100);
-                const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
-                const back = scene.add.rectangle(180, 320, 310, 200, 0x111111, 0.98); // ОРИГИНАЛЬНЫЙ размер 320x200
-                const memeText = scene.add.text(180, 300, allMemes[index], { fontSize: '18px', fill: '#fff', align: 'center', wordWrap: { width: 270 } }).setOrigin(0.5);
-                
-                // ========= КНОПКА "ПОДЕЛИТЬСЯ" (НОВАЯ ПО ТЗ) =========
-                const shareBtn = scene.add.rectangle(100, 380, 100, 40, 0x0066cc).setInteractive();
-                const shareTxt = scene.add.text(100, 380, 'ПОДЕЛИТЬСЯ', { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
-                // =====================================================
-                
-                // ========= КНОПКА "ОК" (ПЕРЕИМЕНОВАНА ПО ТЗ) =========
-                const closeBtn = scene.add.rectangle(260, 380, 80, 40, 0x00aa00).setInteractive();
-                const closeTxt = scene.add.text(260, 380, 'ОК', { fontSize: '14px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
-                // =====================================================
-                
-                detail.add([dim, back, memeText, shareBtn, shareTxt, closeBtn, closeTxt]);
-                
-                // ========= ОБРАБОТЧИК "ПОДЕЛИТЬСЯ" =========
-                shareBtn.on('pointerdown', () => {
-                    // Вызов функции из telegram.js
-                    shareMeme(allMemes[index]);
+            box.on('pointerdown', (function(scene, seenMemes, allMemes, wasPausedBefore, index, isOpened, uiInstance) {
+                return function() {
+                    // ========= ЗАЩИТА ОТ МНОЖЕСТВЕННОГО ОТКРЫТИЯ =========
+                    if (uiInstance.isMemeOpen) return;
+                    uiInstance.isMemeOpen = true;
+                    // =====================================================
                     
-                    // Начисление бонуса (максимум 10 раз)
-                    if (shareCount < 10) {
-                        shareCount++;
-                        valerianStock++;
-                        valStockText.setText(valerianStock);
-                        saveData();
+                    if (isOpened) {
+                        // ========= ОКНО ОТКРЫТОГО МЕМА (СТАРАЯ ЛОГИКА) =========
+                        const detail = scene.add.container(0, 0).setDepth(1100);
+                        const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
+                        const back = scene.add.rectangle(180, 320, 310, 200, 0x111111, 0.98);
+                        const memeText = scene.add.text(180, 300, allMemes[index], { fontSize: '18px', fill: '#fff', align: 'center', wordWrap: { width: 270 } }).setOrigin(0.5);
+                        
+                        const shareBtn = scene.add.rectangle(100, 380, 100, 40, 0x0066cc).setInteractive();
+                        const shareTxt = scene.add.text(100, 380, 'ПОДЕЛИТЬСЯ', { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
+                        
+                        const closeBtn = scene.add.rectangle(260, 380, 80, 40, 0x00aa00).setInteractive();
+                        const closeTxt = scene.add.text(260, 380, 'ОК', { fontSize: '14px', fill: '#fff', fontWeight: 'bold' }).setOrigin(0.5);
+                        
+                        detail.add([dim, back, memeText, shareBtn, shareTxt, closeBtn, closeTxt]);
+                        
+                        shareBtn.on('pointerdown', () => {
+                            if (typeof shareMeme === 'function') {
+                                shareMeme(allMemes[index]);
+                                
+                                if (typeof shareCount !== 'undefined' && shareCount < 10) {
+                                    shareCount++;
+                                    valerianStock++;
+                                    valStockText.setText(valerianStock);
+                                    saveData();
+                                }
+                            }
+                        });
+                        
+                        closeBtn.on('pointerdown', () => {
+                            detail.destroy();
+                            uiInstance.isMemeOpen = false;
+                        });
+                    } else {
+                        // ========= ОКНО НЕОТКРЫТОГО МЕМА (НОВАЯ ЛОГИКА) =========
+                        const detail = scene.add.container(0, 0).setDepth(1100);
+                        const dim = scene.add.rectangle(180, 320, 360, 640, 0x000000, 0.8);
+                        const back = scene.add.rectangle(180, 320, 310, 200, 0x111111, 0.98);
+                        
+                        // Заголовок
+                        const titleText = scene.add.text(180, 270, `Мем #${index + 1} еще не открыт`, 
+                            { fontSize: '18px', fill: '#fff', fontWeight: 'bold' }
+                        ).setOrigin(0.5);
+                        
+                        // Информация о рыбках
+                        const fishInfo = scene.add.text(180, 300, `Ваши рыбки: ${fishCount}`, 
+                            { fontSize: '18px', fill: '#fff' }
+                        ).setOrigin(0.5);
+                        
+                        detail.add([dim, back, titleText, fishInfo]);
+                        
+                        if (fishCount >= 200) {
+                            // ========= КНОПКА "ОТКРЫТЬ ЗА 200 РЫБОК" =========
+                            const openBtn = scene.add.rectangle(180, 350, 180, 40, 0x0066cc).setInteractive();
+                            const openTxt = scene.add.text(180, 350, 'ОТКРЫТЬ ЗА 200 РЫБОК', 
+                                { fontSize: '14px', fill: '#fff', fontWeight: 'bold' }
+                            ).setOrigin(0.5);
+                            detail.add([openBtn, openTxt]);
+                            
+                            openBtn.on('pointerdown', () => {
+                                if (fishCount >= 200) {
+                                    // Списываем рыбки
+                                    fishCount -= 200;
+                                    fishText.setText(fishCount);
+                                    
+                                    // Открываем мем
+                                    seenMemes.add(index);
+                                    memeCountText.setText(`🖼️ ${seenMemes.size}/${allMemes.length}`);
+                                    
+                                    // Сохраняем данные
+                                    saveData();
+                                    
+                                    // Закрываем окно покупки
+                                    detail.destroy();
+                                    uiInstance.isMemeOpen = false;
+                                    
+                                    // Перерисовываем коллекцию (клетка станет зеленой)
+                                    uiInstance.drawMainOverlay(scene, seenMemes, allMemes, wasPausedBefore);
+                                }
+                            });
+                        } else {
+                            // ========= СООБЩЕНИЕ О НЕДОСТАТКЕ РЫБОК =========
+                            const noFishText = scene.add.text(180, 350, 'Накопите 200 рыбок\nили открывайте мемы\nкаждые 500 очков в игре', 
+                                { fontSize: '14px', fill: '#ffaa00', align: 'center', fontWeight: 'bold' }
+                            ).setOrigin(0.5);
+                            detail.add([noFishText]);
+                        }
+                        
+                        // ========= КНОПКА "ЗАКРЫТЬ" (ВСЕГДА) =========
+                        const closeBtn = scene.add.rectangle(180, 390, 100, 35, 0x444444).setInteractive();
+                        const closeTxt = scene.add.text(180, 390, 'ЗАКРЫТЬ', 
+                            { fontSize: '14px', fill: '#fff' }
+                        ).setOrigin(0.5);
+                        detail.add([closeBtn, closeTxt]);
+                        
+                        closeBtn.on('pointerdown', () => {
+                            detail.destroy();
+                            uiInstance.isMemeOpen = false;
+                        });
                     }
-                });
-                
-                // ========= ОБРАБОТЧИК "ОК" (СО СБРОСОМ ФЛАГА) =========
-                closeBtn.on('pointerdown', () => {
-                    detail.destroy();
-                    // ========= СБРОС ФЛАГА ПРИ ЗАКРЫТИИ =========
-                    isMemeOpen = false;
-                    // ============================================
-                });
-            });
+                };
+            }(scene, seenMemes, allMemes, wasPausedBefore, index, isOpened, this)));
         }
     },
 
@@ -135,7 +194,7 @@ const UI = {
         if (this.container) this.container.destroy();
         this.container = scene.add.container(0, 0).setDepth(1000);
 
-        const bg = scene.add.rectangle(180, 320, 340, 540, 0x000022, 0.95).setStrokeStyle(4, 0x00ffff);
+        const bg = scene.add.rectangle(180, 320, 340, 540, 0x000000, 0.95).setStrokeStyle(4, 0x00ffff);
         const title = scene.add.text(180, 75, 'МАГАЗИН', { fontSize: '26px', fontWeight: 'bold', fill: '#fff' }).setOrigin(0.5);
         this.container.add([bg, title]);
 
@@ -204,9 +263,7 @@ const UI = {
         this.container = scene.add.container(0, 0).setDepth(2000);
         
         const bg = scene.add.rectangle(180, 320, 300, 360, 0x000000, 0.9).setStrokeStyle(3, 0xffffff);
-        // ========= ЗАГОЛОВОК "ТОП-1" ВМЕСТО "НАСТРОЙКИ" =========
         const title = scene.add.text(180, 160, 'ТОП-1: ' + bestScore, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-        // ========================================================
         
         const soundBtn = scene.add.rectangle(180, 230, 220, 40, 0x444444).setInteractive();
         const soundTxt = scene.add.text(180, 230, `ЗВУК: ${isSoundOn ? 'ВКЛ' : 'ВЫКЛ'}`, { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
@@ -229,16 +286,16 @@ const UI = {
         const infoBtn = scene.add.rectangle(180, 350, 220, 40, 0x006600).setInteractive();
         const infoTxt = scene.add.text(180, 350, 'ИНСТРУКЦИЯ', { fontSize: '15px', fill: '#fff' }).setOrigin(0.5);
         infoBtn.on('pointerdown', () => {
-    this.showInfo(scene, 
-        "1. Кликай по падающим помидорам\n" +
-        "2. Рыбки котику для магазина\n" + 
-        "3. Собирай мемы каждые 500 очков\n" +
-        "4. Валерьянка спасет при проигрыше\n" +
-        "5. Делись мемами — получай валерьянку\n" +
-        "6. Каждый день одна валерьянка бонусом\n" +
-        "7. Бей свой рекорд — обновляй ТОП-1"
-    );
-});
+            this.showInfo(scene, 
+                "1. Кликай только по падающим помидорам\n" + 
+                "2. Собирай мемы каждые 500 очков\n" +
+                "3. Валерьянка спасет при проигрыше\n" +
+                "4. Делись мемами — получай валерьянку\n" +
+                "5. Каждый день одна валерьянка бонусом\n" +
+                "6. Бей свой рекорд — обновляй ТОП-1\n" +
+                "7. Открывай мемы за 200 рыбок в коллекции"
+            );
+        });
 
         const author = scene.add.text(180, 410, 'Автор: zodiac', { fontSize: '15px', fill: '#aaa' }).setOrigin(0.5);
         const closeBtn = scene.add.text(180, 470, 'ЗАКРЫТЬ', { fontSize: '20px', fill: '#ff0000', fontWeight: 'bold' }).setOrigin(0.5).setInteractive();
