@@ -123,12 +123,12 @@ const UI = {
                         const back = scene.add.rectangle(180, 320, 310, 200, 0x111111, 0.98);
                         
                         // Заголовок
-                        const titleText = scene.add.text(180, 270, `Мем #${index + 1} еще не открыт`, 
+                        const titleText = scene.add.text(180, 250, `Мем #${index + 1} еще не открыт`, 
                             { fontSize: '18px', fill: '#fff', fontWeight: 'bold' }
                         ).setOrigin(0.5);
                         
                         // Информация о рыбках
-                        const fishInfo = scene.add.text(180, 300, `Ваши рыбки: ${fishCount}`, 
+                        const fishInfo = scene.add.text(180, 280, `Ваши рыбки: ${fishCount}`, 
                             { fontSize: '18px', fill: '#fff' }
                         ).setOrigin(0.5);
                         
@@ -136,8 +136,8 @@ const UI = {
                         
                         if (fishCount >= 200) {
                             // ========= КНОПКА "ОТКРЫТЬ ЗА 200 РЫБОК" =========
-                            const openBtn = scene.add.rectangle(180, 350, 180, 40, 0x0066cc).setInteractive();
-                            const openTxt = scene.add.text(180, 350, 'ОТКРЫТЬ ЗА 200 РЫБОК', 
+                            const openBtn = scene.add.rectangle(180, 330, 180, 40, 0x0066cc).setInteractive();
+                            const openTxt = scene.add.text(180, 330, 'ОТКРЫТЬ ЗА 200 РЫБОК', 
                                 { fontSize: '14px', fill: '#fff', fontWeight: 'bold' }
                             ).setOrigin(0.5);
                             detail.add([openBtn, openTxt]);
@@ -165,7 +165,7 @@ const UI = {
                             });
                         } else {
                             // ========= СООБЩЕНИЕ О НЕДОСТАТКЕ РЫБОК =========
-                            const noFishText = scene.add.text(180, 350, 'Накопите 200 рыбок\nили открывайте мемы\nкаждые 500 очков в игре', 
+                            const noFishText = scene.add.text(180, 330, 'Накопите 200 рыбок\nили открывайте мемы\nкаждые 500 очков в игре', 
                                 { fontSize: '14px', fill: '#ffaa00', align: 'center', fontWeight: 'bold' }
                             ).setOrigin(0.5);
                             detail.add([noFishText]);
@@ -334,4 +334,5 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
 
