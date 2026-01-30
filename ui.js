@@ -137,7 +137,7 @@ const UI = {
                         if (fishCount >= 200) {
                             // ========= КНОПКА "ОТКРЫТЬ ЗА 200 РЫБОК" =========
                             const openBtn = scene.add.rectangle(180, 330, 180, 40, 0x0066cc).setInteractive();
-                            const openTxt = scene.add.text(180, 330, 'ОТКРЫТЬ ЗА 200 РЫБОК', 
+                            const openTxt = scene.add.text(180, 330, 'ОТКРЫТЬ ЗА 200 🐟', 
                                 { fontSize: '14px', fill: '#fff', fontWeight: 'bold' }
                             ).setOrigin(0.5);
                             detail.add([openBtn, openTxt]);
@@ -334,5 +334,6 @@ const UI = {
         closeBtn.on('pointerdown', () => dialog.destroy());
     }
 };
+
 
 
