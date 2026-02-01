@@ -295,7 +295,7 @@ function update(time) {
 function spawn() {
     let x = Phaser.Math.Between(50, 310);
     let speed = Phaser.Math.Between(120, 180) * gameDifficulty;
-    if (Phaser.Math.Between(1, 100) <= 7) {
+    if (Phaser.Math.Between(1, 100) <= 8) {
         tomatoesGroup.create(x, -50, 'icon_fish').setScale(0.35).setInteractive().setVelocityY(speed * 0.8);
     } else {
         tomatoesGroup.create(x, -50, 'tomato').setScale(0.31).setInteractive().setVelocityY(speed);
@@ -388,5 +388,6 @@ function togglePause() {
         if (pauseLabel) { pauseLabel.destroy(); pauseLabel = null; }
     }
 }
+
 
 
